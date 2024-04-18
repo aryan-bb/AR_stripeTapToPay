@@ -1,0 +1,79 @@
+name: Integration StripeTerminal
+
+on:
+  pull_request:
+    paths: [ 'stripe_terminal/**', 'one_for_all/**' ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: stripe_terminal
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.x'
+
+      - name: Resolve dependencies
+        run: flutter pub get
+        timeout-minutes: 2
+
+      - name: Check code formatting
+        run: >-
+          dart format --line-length 100 --set-exit-if-changed --output none
+          $(find . ! -path "./.dart_tool/**" ! -path "./build/**" -name "*.dart" ! -name "*.g.dart")
+
+      - name: Analyze code
+        run: flutter analyze --no-fatal-infos
+
+#      # Android
+#      - uses: actions/setup-java@v3
+#        with:
+#          java-version: '17'
+#          distribution: 'zulu'
+#      - run: ./gradlew spotlessCheck
+#        working-directory: stripe_terminal/android
+#      - run: ./gradlew :mek_stripe_terminal:assemble --project-dir ../example/android
+#        working-directory: stripe_terminal/android
+      
+  integration-example:
+    runs-on: macos-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: stripe_terminal/example
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.x'
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+        timeout-minutes: 2
+
+      - name: Check code formatting
+        run: >-
+          dart format --line-length 100 --set-exit-if-changed --output none
+          $(find . ! -path "./.dart_tool/**" ! -path "./build/**" -name "*.dart" ! -name "*.g.dart")
+
+      - name: Analyze code
+        run: flutter analyze --no-fatal-infos
+
+      # IOS
+      - uses: maxim-lobanov/setup-cocoapods@v1
+        with:
+          podfile-path: stripe_terminal/example/ios/Podfile.lock
+
+      - run: pod install --deployment --project-directory=ios
