@@ -1,5 +1,3 @@
-// ignore_for_file: parameter_assignments
-
 library stripe_terminal;
 
 import 'dart:async';
@@ -108,6 +106,7 @@ class Terminal {
   }
 
   // ignore: close_sinks
+  StreamController<List<Reader>>? _controller;
 
   /// Begins discovering readers based on the given discovery configuration.
   ///
@@ -131,12 +130,12 @@ class Terminal {
   ///   to register the reader to your Stripe account. If the SDK does not already have a connection token,
   ///   it will call the fetchToken method which was passed as an argument in [getInstance].
   Stream<List<Reader>> discoverReaders(
-      DiscoveryConfiguration discoveryConfiguration,
-      StreamController<List<Reader>>? controller) {
-    controller = handleStream(controller, () {
+    DiscoveryConfiguration discoveryConfiguration,
+  ) {
+    _controller = handleStream(_controller, () {
       return _platform.discoverReaders(discoveryConfiguration);
     });
-    return controller.stream;
+    return _controller!.stream;
   }
 
   /// Attempts to connect to the given Bluetooth reader with a given connection configuration.
