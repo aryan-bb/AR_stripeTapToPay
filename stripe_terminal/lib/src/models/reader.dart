@@ -1,7 +1,5 @@
 import 'package:mek_data_class/mek_data_class.dart';
 import 'package:mek_stripe_terminal/mek_stripe_terminal.dart';
-import 'package:meta/meta.dart';
-
 part 'reader.g.dart';
 
 /// The possible reader connection statuses for the SDK.
@@ -22,74 +20,16 @@ enum ConnectionStatus {
 /// labeled with the reader or reader type to which they apply.
 @DataClass()
 class Reader with _$Reader {
-  // TODO: Add id field
-
-  /// Used to tell whether the location field has been set. Note that the Internet and simulated
-  /// readers will always have an `null` [locationStatus].
-  ///
-  /// The location is not known. location will be nil.
-  ///
-  /// A reader will have a location status to `null` when a Bluetooth reader’s full location
-  /// information failed to fetch properly during discovery.
-  ///
-  /// (Bluetooth and Apple Built-In readers only.)
   final LocationStatus? locationStatus;
-
-  /// The reader’s device type.
   final DeviceType? deviceType;
-
-  /// True if this is a simulated reader.
   final bool simulated;
-
-  /// The ID of the reader’s Location.
-  ///
-  /// Internet readers remain registered to the location specified when registering the reader
-  /// to your account. For internet readers, this field represents that location. If you need to
-  /// change your internet reader’s location, re-register the reader and specify the new location id
-  /// in the location param. See https://stripe.com/docs/api/terminal/readers/create
-  ///
-  /// Bluetooth and Apple Built-In readers are designed to be more mobile and must be registered
-  /// to a location upon each connection. This field represents the last location that the reader
-  /// was registered to. If the reader has not been used before, this field will be `null`. If you
-  /// associate the reader to a different location while calling [Terminal.connectBluetoothReader],
-  /// this field will update to that new location’s id.
   final String? locationId;
-
   final Location? location;
-
-  // TODO: Add location field
-
-  /// The reader’s serial number.
   final String serialNumber;
-
-  // TODO: Add deviceSoftwareVersion field
-
-  /// LocalMobile, Bluetooth and Usb readers properties
-
-  /// The available update for this reader, or nil if no update is available. This update will also
-  /// have been announced via [PhysicalReaderDelegate.onReportAvailableUpdate]
-  ///
-  /// Install this update with [Terminal.installAvailableUpdate]
-  ///
-  /// calls to [Terminal.installAvailableUpdate] when availableUpdate is `null` will result in
-  /// [PhysicalReaderDelegate.onFinishInstallingUpdate] called immediately with a `null` update and `null` error.
   final bool availableUpdate;
-
-  /// The reader’s battery level, represented as a boxed float in the range [0, 1]. If the reader does not have a battery, or the battery level is unknown, this value is nil.
   final double batteryLevel;
-
-  BatteryStatus? get batteryStatus => BatteryStatus.from(batteryLevel);
-
-  // TODO: Add isCharging/bluetoothDevice field
-
-  /// Internet readers properties
-
-  // TODO: Add ipAddress field
-  // TODO: Add status/networkStatus field
-
   final String? label;
 
-  @internal
   const Reader({
     required this.locationStatus,
     required this.batteryLevel,
@@ -101,6 +41,39 @@ class Reader with _$Reader {
     required this.location,
     required this.label,
   });
+
+  factory Reader.fromJson(Map<String, dynamic> json) {
+    return Reader(
+      locationStatus: json['locationStatus'] != null
+          ? LocationStatus.values[json['locationStatus']]
+          : null,
+      deviceType: json['deviceType'] != null
+          ? DeviceType.values[json['deviceType']]
+          : null,
+      simulated: json['simulated'] ?? false,
+      locationId: json['locationId'],
+      location:
+          json['location'] != null ? Location.fromJson(json['location']) : null,
+      serialNumber: json['serialNumber'],
+      availableUpdate: json['availableUpdate'] ?? false,
+      batteryLevel: json['batteryLevel'] ?? 0.0,
+      label: json['label'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'locationStatus': locationStatus?.index,
+      'deviceType': deviceType?.index,
+      'simulated': simulated,
+      'locationId': locationId,
+      'location': location?.toJson(),
+      'serialNumber': serialNumber,
+      'availableUpdate': availableUpdate,
+      'batteryLevel': batteryLevel,
+      'label': label,
+    };
+  }
 }
 
 /// Represents the possible states of the location object for a discovered reader.
@@ -175,7 +148,8 @@ enum BatteryStatus {
 
   static BatteryStatus? from(double level) {
     if (level == -1) return null;
-    return BatteryStatus.values.singleWhere((e) => level > e.minLevel && level < e.maxLevel);
+    return BatteryStatus.values
+        .singleWhere((e) => level > e.minLevel && level < e.maxLevel);
   }
 }
 
