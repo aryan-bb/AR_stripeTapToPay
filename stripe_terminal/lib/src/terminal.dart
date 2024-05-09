@@ -31,7 +31,7 @@ class Terminal {
   final TerminalHandlers _handlers;
 
   /// Creates an internal `StripeTerminal` instance
-  Terminal._(this._platform, this._handlers);
+  Terminal(this._platform, this._handlers);
 
   /// Initializes the terminal SDK
   static Future<Terminal> getInstance({
@@ -50,7 +50,7 @@ class Terminal {
     return _instance ??= () async {
       try {
         await platform.init(shouldPrintLogs: shouldPrintLogs);
-        return Terminal._(platform, handlers);
+        return Terminal(platform, handlers);
       } catch (_) {
         _instance = null;
         rethrow;
